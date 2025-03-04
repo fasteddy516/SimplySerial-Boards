@@ -3,7 +3,7 @@ name: Update Boards JSON
 on:
   workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
   # schedule:
-  #  - cron: "0 0 * * 1"  # Runs at 00:00 UTC every Monday
+  #   - cron: "0 0 * * 1"  # Runs at 00:00 UTC every Monday (DISABLED)
 
 jobs:
   update-boards:
@@ -20,6 +20,23 @@ jobs:
 
       - name: Install Dependencies
         run: pip install --upgrade pip
+
+      - name: Fetch Latest Released boards.json as released_boards.json
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          LATEST_RELEASE=$(curl -s -H "Authorization: token $GH_PAT" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+
+          ASSET_URL=$(curl -s -H "Authorization: token $GH_PAT" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/$LATEST_RELEASE | jq -r '.assets[] | select(.name=="boards.json") | .browser_download_url')
+
+          if [ -n "$ASSET_URL" ]; then
+            echo "Downloading latest boards.json from $ASSET_URL"
+            curl -L -H "Authorization: token $GH_PAT" -o released_boards.json "$ASSET_URL"
+          else
+            echo "No previous boards.json found in latest release. Proceeding without it."
+          fi
 
       - name: Run Update Script
         run: python update.py
