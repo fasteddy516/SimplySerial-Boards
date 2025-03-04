@@ -173,3 +173,4 @@ cython_debug/
 # SimplySerial-Boards Ignores
 circuitpython/
 boards.json
+released_boards.json

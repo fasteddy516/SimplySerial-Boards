@@ -83,6 +83,7 @@ class BoardEncoder(json.JSONEncoder):
 cp_url = "https://github.com/adafruit/circuitpython"
 cp_path = Path(__file__).parent / "circuitpython"
 json_path = Path(__file__).parent / "boards.json"
+old_json_path = Path(__file__).parent / "released_boards.json"
 
 # Overrides will replace the board information for the associated VID/PID only if the
 # board is found in the CircuitPython repository. This is useful for boards that are
@@ -203,10 +204,10 @@ boardfile = {
     "boards": boards,
 }
 
-json = json.dumps(boardfile, indent=4, cls=BoardEncoder)
+json_data = json.dumps(boardfile, indent=4, cls=BoardEncoder)
 
 with open(str(json_path), mode="w", encoding="utf-8") as f:
-    f.write(json)
+    f.write(json_data)
 
 print("")
 
@@ -227,3 +228,22 @@ for board in manual_entries:
 print(f"Skipped {len(skipped)} files with missing/incomplete USB information:")
 for file in skipped:
     print(f"\t {file}")
+
+# Load both JSON files (if released_boards.json exists)
+if old_json_path.exists():
+    with old_json_path.open("r", encoding="utf-8") as f:
+        old_data = json.load(f)
+
+    with json_path.open("r", encoding="utf-8") as f:
+        new_data = json.load(f)
+
+    # Remove "version" property for comparison
+    old_data.pop("version", None)
+    new_data.pop("version", None)
+
+    # Compare JSON data (ignoring order)
+    if old_data == new_data:
+        print("No changes detected (other than version). Skipping release.")
+        exit(0)  # Exit with success (skips creating a new release)
+
+print("Changes detected or first-time run. Proceeding with release.")
