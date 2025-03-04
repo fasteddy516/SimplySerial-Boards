@@ -1,0 +1,55 @@
+name: Update Boards JSON
+
+on:
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
+  # schedule:
+  #  - cron: "0 0 * * 1"  # Runs at 00:00 UTC every Monday
+
+jobs:
+  update-boards:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: pip install --upgrade pip
+
+      - name: Run Update Script
+        run: python update.py
+
+      - name: Check if boards.json Exists
+        run: |
+          if [ ! -f boards.json ]; then
+            echo "boards.json not found. Exiting..."
+            exit 1
+          fi
+
+      - name: Extract Version from boards.json
+        run: echo "TAG_NAME=$(jq -r '.version' boards.json | sed 's/[:T]/-/g' | sed 's/Z//g')" >> $GITHUB_ENV
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: "Boards JSON - ${{ env.TAG_NAME }}"
+          body: "Automatically generated `boards.json` update."
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload boards.json to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: boards.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
