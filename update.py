@@ -244,16 +244,13 @@ def set_env_variable(key, value):
         print(f"Setting environment variable: {key}={value}")  # Local debug output
 
 
-# Load new JSON file
-with new_file.open("r", encoding="utf-8") as f:
-    new_data = json.load(f)
-
-version = new_data.get("version", "Unknown Version")
-
 # Load both JSON files (if released_boards.json exists)
 if released_file.exists():
     with released_file.open("r", encoding="utf-8") as f:
         old_data = json.load(f)
+
+    with new_file.open("r", encoding="utf-8") as f:
+        new_data = json.load(f)
 
     # Extract vendors and boards
     old_vendors = {v["vid"]: v for v in old_data.get("vendors", [])}
@@ -272,9 +269,6 @@ if released_file.exists():
 
     # Generate changes.txt
     with changes_file.open("w", encoding="utf-8") as f:
-        f.write(f"Boards JSON Version {version}\n")
-        f.write("================================================\n\n")
-
         if added_vendors:
             f.write("Added Vendors:\n")
             for v in added_vendors:
@@ -324,8 +318,6 @@ if released_file.exists():
 else:
     # First-time run: Generate initial changes.txt
     with changes_file.open("w", encoding="utf-8") as f:
-        f.write(f"Boards JSON Version {version}\n")
-        f.write("================================================\n\n")
         f.write("Initial Release\n")
     print("Initial release detected.")
 
