@@ -2,8 +2,8 @@ name: Update Boards JSON
 
 on:
   workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
-  # schedule:
-  #   - cron: "0 5 * * 1"  # Runs at 00:00 UTC every Monday (DISABLED)
+  schedule:
+    - cron: "0 5 * * 1"  # Runs at 00:00 UTC every Monday (DISABLED)
 
 jobs:
   update-boards:
