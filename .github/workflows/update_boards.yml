@@ -48,8 +48,14 @@ jobs:
           curl -L -H "Authorization: token $GH_PAT" -o released_boards.json "$ASSET_URL"
 
       - name: Run Update Script and Compare JSON
+        id: run_update
+        run: python update.py
+
+      - name: Stop Workflow if No Changes Detected
+        if: ${{ failure() || steps.run_update.outcome == 'success' && !contains(steps.run_update.outputs, 'Proceeding with release') }}
         run: |
-          python update.py || exit 0  # Exit gracefully if update.py decides to skip
+          echo "No changes detected. Stopping workflow."
+          exit 0
 
       - name: Check if boards.json Exists
         run: |
