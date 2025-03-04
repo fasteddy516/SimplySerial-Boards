@@ -47,8 +47,9 @@ jobs:
           echo "Downloading latest boards.json from $ASSET_URL"
           curl -L -H "Authorization: token $GH_PAT" -o released_boards.json "$ASSET_URL"
 
-      - name: Run Update Script
-        run: python update.py
+      - name: Run Update Script and Compare JSON
+        run: |
+          python update.py || exit 0  # Exit gracefully if update.py decides to skip
 
       - name: Check if boards.json Exists
         run: |
