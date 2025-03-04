@@ -72,14 +72,7 @@ jobs:
           body_path: changes.txt
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
-      - name: Upload boards.json to Release
-        uses: softprops/action-gh-release@v2
-        if: env.CHANGES_DETECTED == 'true'
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          files: boards.json
+          files: |
+            boards.json
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
