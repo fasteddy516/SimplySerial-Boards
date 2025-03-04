@@ -244,6 +244,8 @@ if old_json_path.exists():
     # Compare JSON data (ignoring order)
     if old_data == new_data:
         print("No changes detected (other than version). Skipping release.")
-        exit(0)  # Exit with success (skips creating a new release)
+        print("::set-output name=changes_detected::false")  # Pass output to GitHub Actions
+        exit(0)
 
 print("Changes detected or first-time run. Proceeding with release.")
+print("::set-output name=changes_detected::true")  # Pass output to GitHub Actions
