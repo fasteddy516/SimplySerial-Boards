@@ -82,8 +82,9 @@ class BoardEncoder(json.JSONEncoder):
 
 cp_url = "https://github.com/adafruit/circuitpython"
 cp_path = Path(__file__).parent / "circuitpython"
-json_path = Path(__file__).parent / "boards.json"
-old_json_path = Path(__file__).parent / "released_boards.json"
+new_file = Path(__file__).parent / "boards.json"
+released_file = Path(__file__).parent / "released_boards.json"
+changes_file = Path("changes.txt")
 
 # Overrides will replace the board information for the associated VID/PID only if the
 # board is found in the CircuitPython repository. This is useful for boards that are
@@ -206,7 +207,7 @@ boardfile = {
 
 json_data = json.dumps(boardfile, indent=4, cls=BoardEncoder)
 
-with open(str(json_path), mode="w", encoding="utf-8") as f:
+with open(str(new_file), mode="w", encoding="utf-8") as f:
     f.write(json_data)
 
 print("")
@@ -243,23 +244,90 @@ def set_env_variable(key, value):
         print(f"Setting environment variable: {key}={value}")  # Local debug output
 
 
+# Load new JSON file
+with new_file.open("r", encoding="utf-8") as f:
+    new_data = json.load(f)
+
+version = new_data.get("version", "Unknown Version")
+
 # Load both JSON files (if released_boards.json exists)
-if old_json_path.exists():
-    with old_json_path.open("r", encoding="utf-8") as f:
+if released_file.exists():
+    with released_file.open("r", encoding="utf-8") as f:
         old_data = json.load(f)
 
-    with json_path.open("r", encoding="utf-8") as f:
-        new_data = json.load(f)
+    # Extract vendors and boards
+    old_vendors = {v["vid"]: v for v in old_data.get("vendors", [])}
+    new_vendors = {v["vid"]: v for v in new_data.get("vendors", [])}
+    old_boards = {f"{b['vid']}:{b['pid']}": b for b in old_data.get("boards", [])}
+    new_boards = {f"{b['vid']}:{b['pid']}": b for b in new_data.get("boards", [])}
 
-    # Remove "version" property for comparison
-    old_data.pop("version", None)
-    new_data.pop("version", None)
+    # Determine changes
+    added_vendors = [v for vid, v in new_vendors.items() if vid not in old_vendors]
+    removed_vendors = [v for vid, v in old_vendors.items() if vid not in new_vendors]
+    modified_vendors = [v for vid, v in new_vendors.items() if vid in old_vendors and v != old_vendors[vid]]
 
-    # Compare JSON data (ignoring order)
-    if old_data == new_data:
+    added_boards = [b for bid, b in new_boards.items() if bid not in old_boards]
+    removed_boards = [b for bid, b in old_boards.items() if bid not in new_boards]
+    modified_boards = [b for bid, b in new_boards.items() if bid in old_boards and b != old_boards[bid]]
+
+    # Generate changes.txt
+    with changes_file.open("w", encoding="utf-8") as f:
+        f.write(f"Boards JSON Version {version}\n")
+        f.write("================================================\n\n")
+
+        if added_vendors:
+            f.write("Added Vendors:\n")
+            for v in added_vendors:
+                f.write(f" + {v['vid']}: {v['make']}\n")
+            f.write("\n")
+
+        if removed_vendors:
+            f.write("Removed Vendors:\n")
+            for v in removed_vendors:
+                f.write(f" - {v['vid']}: {v['make']}\n")
+            f.write("\n")
+
+        if modified_vendors:
+            f.write("Modified Vendors:\n")
+            for v in modified_vendors:
+                f.write(f" * {v['vid']}: {v['make']}\n")
+            f.write("\n")
+
+        if added_boards:
+            f.write("Added Boards:\n")
+            for b in added_boards:
+                f.write(f" + {b['vid']}:{b['pid']} [{b['make']}] {b['model']}\n")
+            f.write("\n")
+
+        if removed_boards:
+            f.write("Removed Boards:\n")
+            for b in removed_boards:
+                f.write(f" - {b['vid']}:{b['pid']} [{b['make']}] {b['model']}\n")
+            f.write("\n")
+
+        if modified_boards:
+            f.write("Modified Boards:\n")
+            for b in modified_boards:
+                f.write(f" * {b['vid']}:{b['pid']} [{b['make']}] {b['model']}\n")
+            f.write("\n")
+
+        if not (
+            added_vendors or removed_vendors or modified_vendors or added_boards or removed_boards or modified_boards
+        ):
+            f.write("No significant changes detected.\n")
+
+    # If only version changed, skip release
+    if not (added_vendors or removed_vendors or modified_vendors or added_boards or removed_boards or modified_boards):
         print("No changes detected (other than version). Skipping release.")
         set_env_variable("CHANGES_DETECTED", "false")
         exit(0)
+else:
+    # First-time run: Generate initial changes.txt
+    with changes_file.open("w", encoding="utf-8") as f:
+        f.write(f"Boards JSON Version {version}\n")
+        f.write("================================================\n\n")
+        f.write("Initial Release\n")
+    print("Initial release detected.")
 
 print("Changes detected or first-time run. Proceeding with release.")
 set_env_variable("CHANGES_DETECTED", "true")

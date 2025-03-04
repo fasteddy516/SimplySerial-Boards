@@ -68,7 +68,7 @@ jobs:
         with:
           tag_name: ${{ env.TAG_NAME }}
           name: "Boards JSON - ${{ env.TAG_NAME }}"
-          body: "Automatically generated `boards.json` update."
+          body_path: changes.txt
           draft: false
           prerelease: false
         env:

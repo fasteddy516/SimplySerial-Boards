@@ -174,3 +174,4 @@ cython_debug/
 circuitpython/
 boards.json
 released_boards.json
+changes.txt
