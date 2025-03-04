@@ -25,19 +25,28 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
+          echo "Fetching latest release tag..."
           LATEST_RELEASE=$(curl -s -H "Authorization: token $GH_PAT" \
-            https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
-
-          ASSET_URL=$(curl -s -H "Authorization: token $GH_PAT" \
-            https://api.github.com/repos/${{ github.repository }}/releases/tags/$LATEST_RELEASE | jq -r '.assets[] | select(.name=="boards.json") | .browser_download_url')
-
-          if [ -n "$ASSET_URL" ]; then
-            echo "Downloading latest boards.json from $ASSET_URL"
-            curl -L -H "Authorization: token $GH_PAT" -o released_boards.json "$ASSET_URL"
-          else
-            echo "No previous boards.json found in latest release. Proceeding without it."
+            https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name // empty')
+  
+          if [ -z "$LATEST_RELEASE" ]; then
+            echo "No previous release found. Proceeding without downloading boards.json."
+            exit 0
           fi
-
+  
+          echo "Latest release found: $LATEST_RELEASE"
+            
+          ASSET_URL=$(curl -s -H "Authorization: token $GH_PAT" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/$LATEST_RELEASE | jq -r '.assets[]? | select(.name=="boards.json") | .browser_download_url // empty')
+  
+          if [ -z "$ASSET_URL" ]; then
+            echo "No boards.json found in the latest release. Proceeding without it."
+            exit 0
+          fi
+  
+          echo "Downloading latest boards.json from $ASSET_URL"
+          curl -L -H "Authorization: token $GH_PAT" -o released_boards.json "$ASSET_URL"
+  
       - name: Run Update Script
         run: python update.py
 
