@@ -169,3 +169,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# SimplySerial-Boards Ignores
+circuitpython/
+boards.json
