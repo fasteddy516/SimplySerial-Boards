@@ -64,7 +64,7 @@ jobs:
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v2
-        if: steps.run_update.outputs.changes_detected == 'true'
+        if: env.CHANGES_DETECTED == 'true'
         with:
           tag_name: ${{ env.TAG_NAME }}
           name: "Boards JSON - ${{ env.TAG_NAME }}"
@@ -76,7 +76,7 @@ jobs:
 
       - name: Upload boards.json to Release
         uses: softprops/action-gh-release@v2
-        if: steps.run_update.outputs.changes_detected == 'true'
+        if: env.CHANGES_DETECTED == 'true'
         with:
           tag_name: ${{ env.TAG_NAME }}
           files: boards.json

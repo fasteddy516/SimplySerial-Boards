@@ -229,6 +229,20 @@ print(f"Skipped {len(skipped)} files with missing/incomplete USB information:")
 for file in skipped:
     print(f"\t {file}")
 
+# Determine if running in GitHub Actions
+is_github_actions = "GITHUB_ENV" in os.environ
+env_file = Path(os.environ["GITHUB_ENV"]) if is_github_actions else None
+
+
+def set_env_variable(key, value):
+    """Writes environment variables in GitHub Actions or prints them locally."""
+    if is_github_actions:
+        with env_file.open("a", encoding="utf-8") as f:
+            f.write(f"{key}={value}\n")
+    else:
+        print(f"Setting environment variable: {key}={value}")  # Local debug output
+
+
 # Load both JSON files (if released_boards.json exists)
 if old_json_path.exists():
     with old_json_path.open("r", encoding="utf-8") as f:
@@ -244,8 +258,8 @@ if old_json_path.exists():
     # Compare JSON data (ignoring order)
     if old_data == new_data:
         print("No changes detected (other than version). Skipping release.")
-        print("::set-output name=changes_detected::false")  # Pass output to GitHub Actions
+        set_env_variable("CHANGES_DETECTED", "false")
         exit(0)
 
 print("Changes detected or first-time run. Proceeding with release.")
-print("::set-output name=changes_detected::true")  # Pass output to GitHub Actions
+set_env_variable("CHANGES_DETECTED", "true")
