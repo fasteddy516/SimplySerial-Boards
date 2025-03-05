@@ -68,7 +68,7 @@ jobs:
         if: env.CHANGES_DETECTED == 'true'
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Boards JSON ${{ env.TAG_NAME }}"
+          name: "${{ env.TAG_NAME }}"
           body_path: changes.txt
           draft: false
           prerelease: false
