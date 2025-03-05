@@ -200,7 +200,7 @@ for board in manual_entries:
 boards.sort(key=lambda b: b.id)
 
 boardfile = {
-    "version": datetime.now().isoformat(),
+    "version": datetime.now().isoformat().replace(":", "-"),
     "vendors": vendors,
     "boards": boards,
 }

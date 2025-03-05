@@ -60,7 +60,7 @@ jobs:
           fi
 
       - name: Extract Version from boards.json
-        run: echo "TAG_NAME=$(jq -r '.version' boards.json | sed 's/[:T]/-/g' | sed 's/Z//g')" >> $GITHUB_ENV
+        run: echo "TAG_NAME=$(jq -r '.version' boards.json | sed 's/:/-/g')" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
