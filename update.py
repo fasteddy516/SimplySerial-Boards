@@ -106,8 +106,6 @@ overrides = [
 manual_entries = [
     Board(vid="2E8A", pid="1028", make="WIZnet", model="WizFi360-EVB-Pico"),
     Board(vid="2E8A", pid="1046", make="WIZnet", model="W6100-EVB-Pico"),
-    Board(vid="2E8A", pid="109F", make="WIZnet", model="W5500-EVB-Pico2"),
-    Board(vid="2E8A", pid="109F", make="WIZnet", model="W5500-EVB-Pico2"),
     Board(vid="2E8A", pid="10A0", make="WIZnet", model="W6100-EVB-Pico2"),
 ]
 
